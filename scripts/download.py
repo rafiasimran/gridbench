@@ -32,9 +32,18 @@ def main():
     path = out / "smard_hourly.csv"
     df.to_csv(path)
     print(f"{len(df):,} hours x {df.shape[1]} series, {df.index[0]} to {df.index[-1]}")
-    print("Empty values per series:")
-    print(df.isna().sum().to_string())
-    print(f"Saved {path}")
+    expected = int((df.index[-1] - df.index[0]).total_seconds() // 3600) + 1
+    print(f"Hours expected between first and last: {expected:,} (missing rows: {expected - len(df):,})")
+    print(f"Duplicate timestamps dropped: {df.attrs.get('duplicates', {})}")
+    print("\nEmpty values per series and year:")
+    print(df.isna().groupby(df.index.year).sum().T.to_string())
+    print("\nFirst and last hour with a value, per series:")
+    for col in df.columns:
+        s = df[col].dropna()
+        print(f"  {col:24} {s.index[0] if len(s) else '-'}  ->  {s.index[-1] if len(s) else '-'}")
+    print("\nRange per series (min / max):")
+    print(df.agg(["min", "max"]).T.to_string())
+    print(f"\nSaved {path}")
 
 
 if __name__ == "__main__":
