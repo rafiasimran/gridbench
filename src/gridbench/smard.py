@@ -53,6 +53,9 @@ SERIES = {
 # instead of read from the cache.
 FRESH_DAYS = 14
 
+# Short pause between downloads, to be polite to a public server.
+PAUSE_S = 0.1
+
 
 def fetch_json(url: str, retries: int = 3) -> dict:
     """GET a URL and parse the JSON, retrying a few times on network errors."""
@@ -107,6 +110,8 @@ def download_series(name: str, start: datetime, end: datetime, cache_dir: str | 
         else:
             data = get(f"{BASE}/{series_id}/{REGION}/{series_id}_{REGION}_hour_{week}.json")
             path.write_text(json.dumps(data), encoding="utf-8")
+            if get is fetch_json:
+                time.sleep(PAUSE_S)
         parts.append(parse_week(data))
 
     if not parts:
